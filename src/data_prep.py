@@ -29,6 +29,11 @@ def clean_and_process(df):
     # Convert dates
     df['ScheduledDay']   = pd.to_datetime(df['ScheduledDay'])
     df['AppointmentDay'] = pd.to_datetime(df['AppointmentDay'])
+    # Feature engineering
+    df['WaitingDays']    = (df['AppointmentDay'] - df['ScheduledDay']).dt.days.clip(lower=0)
+    df['AppDayOfWeek']   = df['AppointmentDay'].dt.dayofweek
+    df['AppHour']        = df['ScheduledDay'].dt.hour
+    df['ScheduledMonth'] = df['ScheduledDay'].dt.month
     # Binary target
     df['NoShow'] = (df['No-show'] == 'Yes').astype(int)
     # Remove negative age
