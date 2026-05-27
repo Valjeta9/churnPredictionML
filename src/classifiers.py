@@ -113,3 +113,67 @@ def train_logistic(X_train, y_train):
     print(f'  Best parameters : {grid.best_params_}')
     print(f'  Best CV F1      : {grid.best_score_:.4f}')
     return grid.best_estimator_
+
+def _balance_oversampling(X_train, y_train, random_state=42):
+    """MLPClassifier doesn't support class_weight, so we balance the classes
+    manually by oversampling the minority class up to the majority size."""
+    rng = np.random.RandomState(random_state)
+    idx_maj = y_train[y_train == 0].index
+    idx_min = y_train[y_train == 1].index
+    idx_min_over = rng.choice(idx_min, size=len(idx_maj), replace=True)
+    idx_bal = np.concatenate([idx_maj.values, idx_min_over])
+    rng.shuffle(idx_bal)
+    return X_train.loc[idx_bal], y_train.loc[idx_bal]
+
+
+def train_neural_network(X_train, y_train):
+    """Train two different NN architectures and return both.
+
+    Architecture A (shallow): one hidden layer with 16 units
+    Architecture B (deep)   : two hidden layers with 64 and 32 units
+
+    Both use ReLU activation and the Adam optimizer.
+    Trained on oversampled (balanced) data since MLP doesn't support class_weight.
+    """
+    print('\n' + '-' * 60)
+    print('  4. Neural Network (MLP) - neural network approach')
+    print('-' * 60)
+
+    # Balance the classes for NN training
+    X_bal, y_bal = _balance_oversampling(X_train, y_train)
+    print(f'  Data balanced via oversampling: {len(X_bal):,} rows '
+          f'(50/50 attended/no-show)')
+
+    # Architecture A: shallow
+    print('\n  Architecture A: (16) - one hidden layer')
+    nn_a = MLPClassifier(hidden_layer_sizes=(16,), activation='relu',
+                         solver='adam', max_iter=300, early_stopping=True,
+                         random_state=42)
+    nn_a.fit(X_bal, y_bal)
+    print(f'     Layers     : Input -> 16 (ReLU) -> Output')
+    print(f'     Iterations : {nn_a.n_iter_}')
+
+    # Architecture B: deep
+    print('\n  Architecture B: (64, 32) - two hidden layers')
+    nn_b = MLPClassifier(hidden_layer_sizes=(64, 32), activation='relu',
+                         solver='adam', max_iter=300, early_stopping=True,
+                         random_state=42)
+    nn_b.fit(X_bal, y_bal)
+    print(f'     Layers     : Input -> 64 (ReLU) -> 32 (ReLU) -> Output')
+    print(f'     Iterations : {nn_b.n_iter_}')
+
+    # Hyperparameter tuning on architecture B (alpha = regularization)
+    print('\n  Hyperparameter tuning on architecture B (alpha):')
+    param_grid = {'alpha': [0.0001, 0.001, 0.01]}
+    grid = GridSearchCV(
+        MLPClassifier(hidden_layer_sizes=(64, 32), activation='relu',
+                      solver='adam', max_iter=300, early_stopping=True,
+                      random_state=42),
+        param_grid, cv=3, scoring='f1', n_jobs=-1
+    )
+    grid.fit(X_bal, y_bal)
+    print(f'     Tested values   : alpha={param_grid["alpha"]}')
+    print(f'     Best parameters : {grid.best_params_}')
+    print(f'     Best CV F1      : {grid.best_score_:.4f}')
+
+    return nn_a, grid.best_estimator_
