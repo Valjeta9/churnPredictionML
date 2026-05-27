@@ -65,3 +65,28 @@ def train_knn(X_train, y_train):
     print(f'  Best parameters : {grid.best_params_}')
     print(f'  Best CV F1      : {grid.best_score_:.4f}')
     return grid.best_estimator_
+
+def train_decision_tree(X_train, y_train):
+    """Decision Tree with GridSearchCV. Uses class_weight='balanced'
+    to handle the imbalanced dataset."""
+    print('\n' + '-' * 60)
+    print('  2. Decision Tree - tree-based')
+    print('-' * 60)
+
+    param_grid = {
+        'criterion'        : ['gini', 'entropy'],
+        'max_depth'        : [3, 5, 7, 10, 15],
+        'min_samples_leaf' : [1, 10, 50, 100]
+    }
+    grid = GridSearchCV(
+        DecisionTreeClassifier(random_state=42, class_weight='balanced'),
+        param_grid, cv=3, scoring='f1', n_jobs=-1
+    )
+    grid.fit(X_train, y_train)
+
+    print(f'  Tested values   : criterion={param_grid["criterion"]}, '
+          f'max_depth={param_grid["max_depth"]}, '
+          f'min_samples_leaf={param_grid["min_samples_leaf"]}')
+    print(f'  Best parameters : {grid.best_params_}')
+    print(f'  Best CV F1      : {grid.best_score_:.4f}')
+    return grid.best_estimator_
