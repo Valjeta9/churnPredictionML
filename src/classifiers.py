@@ -90,3 +90,26 @@ def train_decision_tree(X_train, y_train):
     print(f'  Best parameters : {grid.best_params_}')
     print(f'  Best CV F1      : {grid.best_score_:.4f}')
     return grid.best_estimator_
+
+def train_logistic(X_train, y_train):
+    """Logistic Regression with GridSearchCV over C (regularization strength).
+    Uses class_weight='balanced' to handle the imbalanced dataset."""
+    print('\n' + '-' * 60)
+    print('  3. Logistic Regression - linear approach')
+    print('-' * 60)
+
+    param_grid = {
+        'C'      : [0.01, 0.1, 1, 10],
+        'penalty': ['l2'],
+        'solver' : ['lbfgs']
+    }
+    grid = GridSearchCV(
+        LogisticRegression(max_iter=1000, class_weight='balanced'),
+        param_grid, cv=3, scoring='f1', n_jobs=-1
+    )
+    grid.fit(X_train, y_train)
+
+    print(f'  Tested values   : C={param_grid["C"]}')
+    print(f'  Best parameters : {grid.best_params_}')
+    print(f'  Best CV F1      : {grid.best_score_:.4f}')
+    return grid.best_estimator_
