@@ -35,3 +35,33 @@ def evaluate_model(name, model, X_test, y_test):
         'ConfMatrix': confusion_matrix(y_test, y_pred),
         'y_pred'    : y_pred
     }
+
+def train_knn(X_train, y_train):
+    """k-NN with GridSearchCV over k, weights and metric.
+    Trained on a stratified 20K subsample because k-NN is slow on 88K rows."""
+    print('\n' + '-' * 60)
+    print('  1. k-NN (K-Nearest Neighbors) - distance-based')
+    print('-' * 60)
+
+    # Stratified subsample for speed
+    from sklearn.model_selection import train_test_split as _tts
+    if len(X_train) > 20000:
+        X_knn, _, y_knn, _ = _tts(X_train, y_train, train_size=20000,
+                                  stratify=y_train, random_state=42)
+        print(f'  k-NN trained on a subsample of {len(X_knn):,} rows '
+              f'(out of {len(X_train):,}) for efficiency.')
+    else:
+        X_knn, y_knn = X_train, y_train
+
+    param_grid = {
+        'n_neighbors': [21, 31, 41]
+    }
+    grid = GridSearchCV(KNeighborsClassifier(metric='euclidean', weights='distance'),
+                        param_grid, cv=3, scoring='f1', n_jobs=-1)
+    grid.fit(X_knn, y_knn)
+
+    print(f'  Tested values   : k={param_grid["n_neighbors"]}, '
+          f'weights=distance, metric=euclidean')
+    print(f'  Best parameters : {grid.best_params_}')
+    print(f'  Best CV F1      : {grid.best_score_:.4f}')
+    return grid.best_estimator_
