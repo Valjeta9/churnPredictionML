@@ -37,21 +37,33 @@ def evaluate_model(name, model, X_test, y_test):
     }
 
 def train_knn(X_train, y_train):
-    """k-NN with GridSearchCV over k, weights and metric.
-    Trained on a stratified 20K subsample because k-NN is slow on 88K rows."""
+    """k-NN with GridSearchCV over k.
+
+    Two steps before training:
+      1. Class balancing via oversampling - k-NN doesn't support class_weight,
+         so on an 80/20 dataset it would always predict the majority class.
+         Balancing makes the comparison with other models fair.
+      2. Stratified subsample of 20K rows - k-NN is slow on tens of thousands
+         of rows (distance computation for every point).
+    """
     print('\n' + '-' * 60)
     print('  1. k-NN (K-Nearest Neighbors) - distance-based')
     print('-' * 60)
 
-    # Stratified subsample for speed
+    # 1. Balance the classes (same approach as NN, since k-NN lacks class_weight)
+    X_bal, y_bal = _balance_oversampling(X_train, y_train)
+    print(f'  Data balanced via oversampling: {len(X_bal):,} rows '
+          f'(50/50 attended/no-show)')
+
+    # 2. Stratified subsample for speed
     from sklearn.model_selection import train_test_split as _tts
-    if len(X_train) > 20000:
-        X_knn, _, y_knn, _ = _tts(X_train, y_train, train_size=20000,
-                                  stratify=y_train, random_state=42)
+    if len(X_bal) > 20000:
+        X_knn, _, y_knn, _ = _tts(X_bal, y_bal, train_size=20000,
+                                  stratify=y_bal, random_state=42)
         print(f'  k-NN trained on a subsample of {len(X_knn):,} rows '
-              f'(out of {len(X_train):,}) for efficiency.')
+              f'(out of {len(X_bal):,}) for efficiency.')
     else:
-        X_knn, y_knn = X_train, y_train
+        X_knn, y_knn = X_bal, y_bal
 
     param_grid = {
         'n_neighbors': [21, 31, 41]
