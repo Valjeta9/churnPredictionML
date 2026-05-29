@@ -53,3 +53,56 @@ def save_elbow_silhouette(df_k, output_path):
     plt.savefig(output_path, dpi=150, bbox_inches='tight')
     plt.close()
     print(f'  Elbow/Silhouette figure saved: {output_path}')
+
+def apply_kmeans(X, y_true, k=2, output_path='results/clustering.png',
+                 sample_size=8000):
+    """Apply K-Means with the given k, visualize with PCA, and compare
+    with the true labels. Returns a dict with labels, ari, crosstab."""
+    print('\n' + '=' * 60)
+    print(f'  K-MEANS with k={k}')
+    print('=' * 60)
+
+    km = MiniBatchKMeans(n_clusters=k, random_state=42, n_init=10)
+    cluster_labels = km.fit_predict(X)
+
+    ari = adjusted_rand_score(y_true, cluster_labels)
+    print(f'\n  Adjusted Rand Index (ARI) vs true labels: {ari:.4f}')
+    print('  (ARI=1 perfect match, ARI~0 random match)')
+
+    crosstab = pd.crosstab(cluster_labels, y_true,
+                           rownames=['Cluster'], colnames=['True NoShow'])
+    print('\n  Cross-tab (Cluster vs True NoShow):')
+    print('  ' + crosstab.to_string().replace('\n', '\n  '))
+
+    # PCA visualization (on a sample for plotting speed)
+    rng = np.random.RandomState(42)
+    idx = rng.choice(len(X), min(sample_size, len(X)), replace=False)
+    X_s = X.iloc[idx] if hasattr(X, 'iloc') else X[idx]
+    cl_s = cluster_labels[idx]
+    y_s  = y_true.iloc[idx].values if hasattr(y_true, 'iloc') else y_true[idx]
+
+    pca = PCA(n_components=2, random_state=42)
+    X_pca = pca.fit_transform(X_s)
+    var_exp = pca.explained_variance_ratio_.sum() * 100
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5.5))
+    fig.suptitle(f'Figure. K-Means clustering (k={k}) - PCA visualization',
+                 fontsize=13, fontweight='bold')
+    s1 = axes[0].scatter(X_pca[:, 0], X_pca[:, 1], c=cl_s, cmap='viridis',
+                         alpha=0.5, s=12)
+    axes[0].set_title(f'K-Means clusters (explained variance: {var_exp:.1f}%)')
+    axes[0].set_xlabel('Principal Component 1 (PC1)')
+    axes[0].set_ylabel('Principal Component 2 (PC2)')
+    plt.colorbar(s1, ax=axes[0], label='Cluster')
+    s2 = axes[1].scatter(X_pca[:, 0], X_pca[:, 1], c=y_s, cmap='coolwarm',
+                         alpha=0.5, s=12)
+    axes[1].set_title('True labels (NoShow: red=Yes, blue=No)')
+    axes[1].set_xlabel('Principal Component 1 (PC1)')
+    axes[1].set_ylabel('Principal Component 2 (PC2)')
+    plt.colorbar(s2, ax=axes[1], label='NoShow')
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.close()
+    print(f'\n  Clustering figure saved: {output_path}')
+
+    return {'labels': cluster_labels, 'ari': ari, 'crosstab': crosstab}
