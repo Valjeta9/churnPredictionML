@@ -1,14 +1,3 @@
-"""
-classifiers.py - Four classifiers with hyperparameter tuning
-Project: Patient No-Show Prediction
-
-Four classifiers with different approaches:
-  1. k-NN               -> distance-based
-  2. Decision Tree      -> tree-based
-  3. Logistic Regression -> linear
-  4. Neural Network     -> neural network (2 architectures)
-"""
-
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import GridSearchCV
