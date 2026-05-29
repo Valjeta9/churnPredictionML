@@ -1,12 +1,3 @@
-"""
-feature_selection.py - Feature selection experiment
-Project: Patient No-Show Prediction
-
-Tests whether using FEWER features keeps or improves performance.
-Method: SelectKBest with ANOVA F-test.
-Reference model: Decision Tree (fast on 110K rows).
-"""
-
 import pandas as pd
 from sklearn.feature_selection import SelectKBest, f_classif
 from sklearn.tree import DecisionTreeClassifier

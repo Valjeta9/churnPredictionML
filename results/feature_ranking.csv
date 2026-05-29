@@ -1,0 +1,14 @@
+Feature,F_Score
+WaitingDays,2910.55
+ScheduledMonth,2340.11
+SMS_received,1388.02
+Age,337.0
+AppHour,336.78
+Hipertension,99.97
+Scholarship,68.81
+Diabetes,21.73
+Handcap,2.27
+Gender,2.26
+AppDayOfWeek,0.61
+Neighbourhood_freq,0.41
+Alcoholism,0.12

@@ -1,0 +1,5 @@
+Model,Accuracy,Precision,Recall,F1-Score
+k-NN,0.6247,0.3,0.6438,0.4093
+Decision Tree,0.5752,0.2999,0.8266,0.4401
+Logistic Reg.,0.6579,0.3137,0.5842,0.4082
+Neural Net (16),0.6082,0.3117,0.7784,0.4452
